@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global tweaks layered on top of Tailwind base.
+ * Keep this file tiny — every rule here is a rule you can't co-locate
+ * with a component, so they're load-bearing for the whole app. */
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Flipkart-style scrollbar hiding on horizontal strips (category row). */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
