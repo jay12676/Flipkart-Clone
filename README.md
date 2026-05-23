@@ -1,7 +1,5 @@
 # Flipkart Clone
 
-[![Deploy](https://github.com/jay12676/Flipkart-Clone/actions/workflows/deploy.yml/badge.svg)](https://github.com/jay12676/Flipkart-Clone/actions/workflows/deploy.yml)
-
 A functional e-commerce web app that replicates Flipkart's design, browsing, cart, wishlist, auth, and checkout flow.
 
 ## Stack
@@ -13,7 +11,6 @@ A functional e-commerce web app that replicates Flipkart's design, browsing, car
 | Backend  | Python 3.12, FastAPI, SQLAlchemy 2.0, Pydantic v2          |
 | Database | PostgreSQL + Alembic migrations + idempotent seed script   |
 | Auth     | Firebase (email + password), ID-token verification on API  |
-| Deploy   | Linux VPS — nginx + systemd uvicorn, Postgres on host      |
 
 ## Local development
 
@@ -63,14 +60,6 @@ frontend/
     hooks/
     pages/
     utils/
-.github/workflows/
-  ci.yml         Lint + build on push/PR
-  deploy.yml     SSH deploy to VPS on push to main
-deploy/
-  setup-vps.sh             one-time bootstrap
-  deploy.sh                idempotent deploy step
-  flipkart-backend.service systemd unit (uvicorn)
-  nginx.conf               reverse proxy
 docker-compose.yml         local-dev Postgres
 ```
 
@@ -79,7 +68,7 @@ docker-compose.yml         local-dev Postgres
 | Variable          | Default                                                                | Notes                            |
 | ----------------- | ---------------------------------------------------------------------- | -------------------------------- |
 | `DATABASE_URL`    | `postgresql+psycopg2://postgres:postgres@localhost:5432/flipkart_clone` | SQLAlchemy URL                   |
-| `CORS_ORIGINS`    | `http://localhost:5173,http://127.0.0.1:5173`                          | Comma-separated allowed origins. In prod set to the VPS origin. |
+| `CORS_ORIGINS`    | `http://localhost:5173,http://127.0.0.1:5173`                          | Comma-separated allowed origins. |
 | `DEFAULT_USER_ID` | `1`                                                                    | Fallback when no Bearer token is sent (lets `/docs` work) |
 | `FIREBASE_PROJECT_ID` | *(required for auth)*                                              | Must match the frontend's `VITE_FIREBASE_PROJECT_ID`. |
 
@@ -87,7 +76,7 @@ docker-compose.yml         local-dev Postgres
 
 | Variable                              | Notes                                                            |
 | ------------------------------------- | ---------------------------------------------------------------- |
-| `VITE_API_BASE_URL`                   | Empty in dev (Vite proxy). In prod set to `/api` (nginx fronts both). |
+| `VITE_API_BASE_URL`                   | Empty in dev (Vite proxy). Set to the API origin in other environments. |
 | `VITE_FIREBASE_*`                     | From Firebase Console → Project Settings → Your apps. |
 | `VITE_EMAILJS_*`                      | From [EmailJS](https://dashboard.emailjs.com). Optional — empty values skip the email step. |
 
@@ -122,24 +111,6 @@ Enable **Email/Password sign-in** in Firebase Console before running the fronten
 - Wishlist — heart on each product card and the detail page. Toggle via `POST /api/wishlist/items`. Per-user, persisted, `UNIQUE(user_id, product_id)`.
 - Email — on place-order the frontend fires a confirmation email via EmailJS. No backend SMTP.
 - Responsive — grid collapses 5 → 4 → 3 → 2 from xl down; header search/cart adapt on small screens.
-
-## Production deploy (Linux VPS)
-
-The app deploys to a single VPS: nginx serves the built frontend and reverse-proxies `/api/*` to a uvicorn process managed by systemd. Postgres runs on the same box.
-
-See [`deploy/README.md`](deploy/README.md) for the full walkthrough. TL;DR:
-
-```bash
-ssh root@<VPS_IP>
-git clone https://github.com/<you>/Flipkart-Clone.git /tmp/flipkart-clone
-REPO_URL=https://github.com/<you>/Flipkart-Clone.git \
-  bash /tmp/flipkart-clone/deploy/setup-vps.sh
-
-# edit /srv/flipkart-clone/backend/.env and frontend/.env, then:
-sudo -u deploy bash /srv/flipkart-clone/deploy/deploy.sh
-```
-
-After the first manual deploy, pushes to `main` ship automatically via `.github/workflows/deploy.yml`. It SSHes in, `git pull`s, installs deps, runs migrations, restarts the backend, builds the frontend, and reloads nginx. Required repo secrets: `SSH_IP`, `SSH_USER`, `SSH_PASS`, `SSH_PATH`.
 
 ## Notes
 

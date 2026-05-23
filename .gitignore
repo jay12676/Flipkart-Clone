@@ -1,8 +1,9 @@
-# OS / editor noise
+# OS / editor / tool noise
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+.claude/
 *.swp
 
 # Python / backend
